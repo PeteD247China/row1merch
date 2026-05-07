@@ -326,6 +326,12 @@ export function SkuDetailClient({
                   </p>
                 </div>
                 <div>
+                  <p className="text-xs text-slate-500 mb-0.5">Landed Cost / Unit</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {formatCurrency(sku.landed_cost_per_unit)}
+                  </p>
+                </div>
+                <div>
                   <p className="text-xs text-slate-500 mb-0.5">Client Price</p>
                   <p className="text-sm font-medium text-slate-900">
                     {formatCurrency(sku.client_price)}

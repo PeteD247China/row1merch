@@ -40,6 +40,7 @@ export interface SKU {
   description: string | null;
   cost_price: number;
   client_price: number;
+  landed_cost_per_unit: number;
   status: SkuStatus;
   stock_qty: number;
   reorder_point: number;

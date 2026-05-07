@@ -39,6 +39,7 @@ create table skus (
   description text,
   cost_price numeric(10,2) not null default 0,
   client_price numeric(10,2) not null default 0,
+  landed_cost_per_unit numeric(10,2) not null default 0,
   status text not null default 'in_review'
     check (status in ('in_review','sample_pending','in_production','in_transit','landed','on_sale','discontinued')),
   stock_qty integer not null default 0,
@@ -190,6 +191,15 @@ create policy "Clients insert messages for their SKUs"
         and skus.client_id = get_my_client_id()
     )
   );
+
+-- ─────────────────────────────────────────────
+-- MIGRATIONS (run if upgrading an existing database)
+-- ─────────────────────────────────────────────
+
+-- Rename shipping_cost → landed_cost_per_unit (run if upgrading from shipping_cost):
+-- alter table skus rename column shipping_cost to landed_cost_per_unit;
+-- If the column doesn't exist at all:
+-- alter table skus add column if not exists landed_cost_per_unit numeric(10,2) not null default 0;
 
 -- ─────────────────────────────────────────────
 -- STORAGE BUCKET (run separately or via dashboard)

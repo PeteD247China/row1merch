@@ -40,15 +40,15 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
   const [sendingMsg, setSendingMsg] = useState(false);
   const [activeTab, setActiveTab] = useState<"designs" | "notes" | "messages" | "calculator">("designs");
   const [qty, setQty] = useState("100");
-  const [shippingPerUnit, setShippingPerUnit] = useState("2.50");
 
   const qtyNum = parseInt(qty) || 0;
-  const shipNum = parseFloat(shippingPerUnit) || 0;
-  const unitCost = sku.cost_price;
-  const totalCost = (unitCost + shipNum) * qtyNum;
-  const totalRevenue = sku.client_price * qtyNum;
-  const totalProfit = totalRevenue - totalCost;
-  const margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+  const factoryCost = sku.cost_price;
+  const landedCost = sku.landed_cost_per_unit;
+  const totalCostPerUnit = factoryCost + landedCost;
+  const clientPrice = sku.client_price;
+  const marginPerUnit = clientPrice - totalCostPerUnit;
+  const marginPct = clientPrice > 0 ? (marginPerUnit / clientPrice) * 100 : 0;
+  const totalProfit = marginPerUnit * qtyNum;
 
   const currentStepIdx = PRODUCTION_STEPS.findIndex((s) => s.key === sku.status);
 
@@ -314,63 +314,64 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
 
           {/* Margin Calculator */}
           {activeTab === "calculator" && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Quantity
-                  </label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={qty}
-                    onChange={(e) => setQty(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Shipping per Unit (£)
-                  </label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={shippingPerUnit}
-                    onChange={(e) => setShippingPerUnit(e.target.value)}
-                  />
-                </div>
+            <div className="space-y-4">
+              <div className="max-w-xs">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Quantity
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={qty}
+                  onChange={(e) => setQty(e.target.value)}
+                />
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Unit cost</span>
-                  <span className="font-medium text-slate-900">{formatCurrency(unitCost)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Shipping per unit</span>
-                  <span className="font-medium text-slate-900">{formatCurrency(shipNum)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Total landed cost ({qtyNum} units)</span>
-                  <span className="font-medium text-slate-900">{formatCurrency(totalCost)}</span>
-                </div>
-                <div className="border-t border-slate-200 pt-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 divide-y divide-slate-200 overflow-hidden">
+                {/* Per-unit breakdown */}
+                <div className="px-5 py-4 space-y-2.5">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
+                    Per unit
+                  </p>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Total revenue ({qtyNum} × {formatCurrency(sku.client_price)})</span>
-                    <span className="font-medium text-slate-900">{formatCurrency(totalRevenue)}</span>
+                    <span className="text-slate-600">Factory cost per unit</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(factoryCost)}</span>
                   </div>
-                </div>
-                <div className="border-t border-slate-200 pt-3 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-semibold text-slate-900">Total Profit</span>
-                    <span className={`text-sm font-bold ${totalProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {formatCurrency(totalProfit)}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Landed cost per unit</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(landedCost)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold border-t border-slate-200 pt-2 mt-1">
+                    <span className="text-slate-700">Total cost per unit</span>
+                    <span className="text-slate-900">{formatCurrency(totalCostPerUnit)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
+                    <span className="text-slate-600">Client price per unit</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(clientPrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Margin per unit (£)</span>
+                    <span className={`font-semibold ${marginPerUnit >= 0 ? "text-green-700" : "text-red-600"}`}>
+                      {formatCurrency(marginPerUnit)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-semibold text-slate-900">Margin</span>
-                    <span className={`text-sm font-bold ${margin >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {margin.toFixed(1)}%
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Margin %</span>
+                    <span className={`font-semibold ${marginPct >= 0 ? "text-green-700" : "text-red-600"}`}>
+                      {marginPct.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Total at quantity */}
+                <div className="px-5 py-4 bg-white">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
+                    At {qtyNum.toLocaleString()} units
+                  </p>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-base font-semibold text-slate-900">Total profit</span>
+                    <span className={`text-xl font-bold ${totalProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {formatCurrency(totalProfit)}
                     </span>
                   </div>
                 </div>

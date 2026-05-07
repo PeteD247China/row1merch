@@ -38,6 +38,7 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
     description: sku?.description ?? "",
     cost_price: sku?.cost_price?.toString() ?? "",
     client_price: sku?.client_price?.toString() ?? "",
+    landed_cost_per_unit: sku?.landed_cost_per_unit?.toString() ?? "",
     status: sku?.status ?? "in_review",
     stock_qty: sku?.stock_qty?.toString() ?? "0",
     reorder_point: sku?.reorder_point?.toString() ?? "0",
@@ -62,6 +63,7 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
       description: form.description || null,
       cost_price: parseFloat(form.cost_price),
       client_price: parseFloat(form.client_price),
+      landed_cost_per_unit: parseFloat(form.landed_cost_per_unit) || 0,
       status: form.status,
       stock_qty: parseInt(form.stock_qty),
       reorder_point: parseInt(form.reorder_point),
@@ -149,7 +151,7 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Cost Price (£) <span className="text-red-500">*</span>
@@ -163,6 +165,22 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
             onChange={(e) => set("cost_price", e.target.value)}
             placeholder="0.00"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Landed Cost per Unit (£)
+          </label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.landed_cost_per_unit}
+            onChange={(e) => set("landed_cost_per_unit", e.target.value)}
+            placeholder="0.00"
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            Total cost per unit inc. freight, duty &amp; clearance
+          </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
