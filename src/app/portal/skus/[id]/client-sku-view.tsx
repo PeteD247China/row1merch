@@ -40,14 +40,14 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
   const [sendingMsg, setSendingMsg] = useState(false);
   const [activeTab, setActiveTab] = useState<"designs" | "notes" | "messages" | "calculator">("designs");
   const [qty, setQty] = useState("100");
+  const [sellPrice, setSellPrice] = useState("");
 
+  // The client's own margin: their selling price vs. what they pay us
   const qtyNum = parseInt(qty) || 0;
-  const factoryCost = sku.cost_price;
-  const landedCost = sku.landed_cost_per_unit;
-  const totalCostPerUnit = factoryCost + landedCost;
+  const sellPriceNum = parseFloat(sellPrice) || 0;
   const clientPrice = sku.client_price;
-  const marginPerUnit = clientPrice - totalCostPerUnit;
-  const marginPct = clientPrice > 0 ? (marginPerUnit / clientPrice) * 100 : 0;
+  const marginPerUnit = sellPriceNum - clientPrice;
+  const marginPct = sellPriceNum > 0 ? (marginPerUnit / sellPriceNum) * 100 : 0;
   const totalProfit = marginPerUnit * qtyNum;
 
   const currentStepIdx = PRODUCTION_STEPS.findIndex((s) => s.key === sku.status);
@@ -55,30 +55,33 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
   async function handleSendMessage() {
     if (!messageText.trim()) return;
     setSendingMsg(true);
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data: clientRecord } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("supabase_auth_id", user.id)
-      .single();
+      const { data: clientRecord } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("supabase_auth_id", user.id)
+        .single();
 
-    if (!clientRecord) return;
+      if (!clientRecord) return;
 
-    const { data: msg, error } = await supabase
-      .from("messages")
-      .insert({ sku_id: sku.id, sender_id: clientRecord.id, content: messageText })
-      .select("*, sender:clients(*)")
-      .single();
+      const { data: msg, error } = await supabase
+        .from("messages")
+        .insert({ sku_id: sku.id, sender_id: clientRecord.id, content: messageText })
+        .select("*, sender:clients(*)")
+        .single();
 
-    if (!error && msg) {
-      setMessages((prev) => [...prev, msg]);
-      setMessageText("");
+      if (!error && msg) {
+        setMessages((prev) => [...prev, msg]);
+        setMessageText("");
+      }
+    } finally {
+      setSendingMsg(false);
     }
-    setSendingMsg(false);
   }
 
   return (
@@ -315,16 +318,31 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
           {/* Margin Calculator */}
           {activeTab === "calculator" && (
             <div className="space-y-4">
-              <div className="max-w-xs">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Quantity
-                </label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-4 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Your selling price (£)
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Quantity
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={qty}
+                    onChange={(e) => setQty(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 divide-y divide-slate-200 overflow-hidden">
@@ -334,31 +352,23 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
                     Per unit
                   </p>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Factory cost per unit</span>
-                    <span className="font-medium text-slate-900">{formatCurrency(factoryCost)}</span>
+                    <span className="text-slate-600">Your selling price</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(sellPriceNum)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Landed cost per unit</span>
-                    <span className="font-medium text-slate-900">{formatCurrency(landedCost)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-semibold border-t border-slate-200 pt-2 mt-1">
-                    <span className="text-slate-700">Total cost per unit</span>
-                    <span className="text-slate-900">{formatCurrency(totalCostPerUnit)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
-                    <span className="text-slate-600">Client price per unit</span>
+                    <span className="text-slate-600">Your price from Row1Merch</span>
                     <span className="font-medium text-slate-900">{formatCurrency(clientPrice)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Margin per unit (£)</span>
-                    <span className={`font-semibold ${marginPerUnit >= 0 ? "text-green-700" : "text-red-600"}`}>
+                  <div className="flex justify-between text-sm font-semibold border-t border-slate-200 pt-2 mt-1">
+                    <span className="text-slate-700">Your margin per unit</span>
+                    <span className={marginPerUnit >= 0 ? "text-green-700" : "text-red-600"}>
                       {formatCurrency(marginPerUnit)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Margin %</span>
+                    <span className="text-slate-600">Your margin %</span>
                     <span className={`font-semibold ${marginPct >= 0 ? "text-green-700" : "text-red-600"}`}>
-                      {marginPct.toFixed(1)}%
+                      {sellPriceNum > 0 ? `${marginPct.toFixed(1)}%` : "-"}
                     </span>
                   </div>
                 </div>

@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
   const [
     { data: skus },
     { count: totalClients },
-    { data: lowStockSkus },
+    { data: activeStockSkus },
   ] = await Promise.all([
     supabase
       .from("skus")
@@ -27,9 +27,13 @@ export default async function AdminDashboard() {
     supabase
       .from("skus")
       .select("id, sku_code, name, stock_qty, reorder_point, client:clients(company_name)")
-      .filter("stock_qty", "lte", "reorder_point")
       .neq("status", "discontinued"),
   ]);
+
+  // PostgREST can't compare two columns, so filter here
+  const lowStockSkus = (activeStockSkus ?? []).filter(
+    (s) => s.stock_qty <= s.reorder_point
+  );
 
   const statusCounts: Record<string, number> = {};
   (skus ?? []).forEach((s: SKU) => {

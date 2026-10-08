@@ -36,9 +36,9 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
     sku_code: sku?.sku_code ?? "",
     name: sku?.name ?? "",
     description: sku?.description ?? "",
-    cost_price: sku?.cost_price?.toString() ?? "",
+    cost_price: sku?.cost?.cost_price?.toString() ?? "",
     client_price: sku?.client_price?.toString() ?? "",
-    landed_cost_per_unit: sku?.landed_cost_per_unit?.toString() ?? "",
+    landed_cost_per_unit: sku?.cost?.landed_cost_per_unit?.toString() ?? "",
     status: sku?.status ?? "in_review",
     stock_qty: sku?.stock_qty?.toString() ?? "0",
     reorder_point: sku?.reorder_point?.toString() ?? "0",
@@ -55,49 +55,58 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
     e.preventDefault();
     setSaving(true);
     setError(null);
-    const supabase = createClient();
 
-    const payload = {
-      sku_code: form.sku_code,
-      name: form.name,
-      description: form.description || null,
-      cost_price: parseFloat(form.cost_price),
-      client_price: parseFloat(form.client_price),
-      landed_cost_per_unit: parseFloat(form.landed_cost_per_unit) || 0,
-      status: form.status,
-      stock_qty: parseInt(form.stock_qty),
-      reorder_point: parseInt(form.reorder_point),
-      supplier_id: form.supplier_id || null,
-      warehouse_id: form.warehouse_id || null,
-      client_id: form.client_id,
-    };
+    try {
+      const supabase = createClient();
 
-    let result;
-    if (sku) {
-      result = await supabase.from("skus").update(payload).eq("id", sku.id);
-    } else {
-      result = await supabase.from("skus").insert(payload);
+      const payload = {
+        sku_code: form.sku_code,
+        name: form.name,
+        description: form.description || null,
+        client_price: parseFloat(form.client_price),
+        status: form.status,
+        stock_qty: parseInt(form.stock_qty),
+        reorder_point: parseInt(form.reorder_point),
+        supplier_id: form.supplier_id || null,
+        warehouse_id: form.warehouse_id || null,
+        client_id: form.client_id,
+      };
+
+      const result = sku
+        ? await supabase.from("skus").update(payload).eq("id", sku.id).select("id").single()
+        : await supabase.from("skus").insert(payload).select("id").single();
+
+      if (result.error) {
+        setError(result.error.message);
+        setSaving(false);
+        return;
+      }
+
+      // Costs live in the admin-only sku_costs table
+      const { error: costError } = await supabase.from("sku_costs").upsert({
+        sku_id: result.data.id,
+        cost_price: parseFloat(form.cost_price),
+        landed_cost_per_unit: parseFloat(form.landed_cost_per_unit) || 0,
+      });
+
+      if (costError) {
+        setError(`SKU saved, but costs failed to save: ${costError.message}`);
+        setSaving(false);
+        router.refresh();
+        return;
+      }
+
+      router.refresh();
+      onSuccess?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     }
 
-    if (result.error) {
-      setError(result.error.message);
-      setSaving(false);
-      return;
-    }
-
-    router.refresh();
-    onSuccess?.();
     setSaving(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -275,6 +284,12 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
           </Select>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="secondary" onClick={onSuccess}>

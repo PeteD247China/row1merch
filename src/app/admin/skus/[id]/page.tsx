@@ -17,7 +17,7 @@ export default async function SkuDetailPage({ params }: { params: Promise<{ id: 
   ] = await Promise.all([
     supabase
       .from("skus")
-      .select("*, supplier:suppliers(*), warehouse:warehouses(*), client:clients(*)")
+      .select("*, supplier:suppliers(*), warehouse:warehouses(*), client:clients(*), cost:sku_costs(*)")
       .eq("id", id)
       .single(),
     supabase.from("clients").select("*").eq("role", "client"),

@@ -132,36 +132,39 @@ export function SkuDetailClient({
   async function handleSendMessage() {
     if (!messageText.trim()) return;
     setSendingMsg(true);
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data: clientRecord } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("supabase_auth_id", user.id)
-      .single();
+      const { data: clientRecord } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("supabase_auth_id", user.id)
+        .single();
 
-    if (!clientRecord) return;
+      if (!clientRecord) return;
 
-    const { data: msg, error } = await supabase
-      .from("messages")
-      .insert({
-        sku_id: sku.id,
-        sender_id: clientRecord.id,
-        content: messageText,
-      })
-      .select("*, sender:clients(*)")
-      .single();
+      const { data: msg, error } = await supabase
+        .from("messages")
+        .insert({
+          sku_id: sku.id,
+          sender_id: clientRecord.id,
+          content: messageText,
+        })
+        .select("*, sender:clients(*)")
+        .single();
 
-    if (!error && msg) {
-      setMessages((prev) => [...prev, msg]);
-      setMessageText("");
+      if (!error && msg) {
+        setMessages((prev) => [...prev, msg]);
+        setMessageText("");
+      }
+    } finally {
+      setSendingMsg(false);
     }
-    setSendingMsg(false);
   }
 
   return (
@@ -322,13 +325,13 @@ export function SkuDetailClient({
                 <div>
                   <p className="text-xs text-slate-500 mb-0.5">Cost Price</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {formatCurrency(sku.cost_price)}
+                    {formatCurrency(sku.cost?.cost_price ?? 0)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 mb-0.5">Landed Cost / Unit</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {formatCurrency(sku.landed_cost_per_unit)}
+                    {formatCurrency(sku.cost?.landed_cost_per_unit ?? 0)}
                   </p>
                 </div>
                 <div>

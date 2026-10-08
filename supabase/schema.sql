@@ -37,9 +37,7 @@ create table skus (
   sku_code text not null unique,
   name text not null,
   description text,
-  cost_price numeric(10,2) not null default 0,
   client_price numeric(10,2) not null default 0,
-  landed_cost_per_unit numeric(10,2) not null default 0,
   status text not null default 'in_review'
     check (status in ('in_review','sample_pending','in_production','in_transit','landed','on_sale','discontinued')),
   stock_qty integer not null default 0,
@@ -48,6 +46,14 @@ create table skus (
   warehouse_id uuid references warehouses(id) on delete set null,
   client_id uuid not null references clients(id) on delete cascade,
   created_at timestamptz not null default now()
+);
+
+-- Row1Merch's costs, kept out of skus so clients can never read them
+-- (RLS is row-level only, so any column on skus is visible to the owning client)
+create table sku_costs (
+  sku_id uuid primary key references skus(id) on delete cascade,
+  cost_price numeric(10,2) not null default 0,
+  landed_cost_per_unit numeric(10,2) not null default 0
 );
 
 create table designs (
@@ -95,6 +101,7 @@ alter table clients enable row level security;
 alter table suppliers enable row level security;
 alter table warehouses enable row level security;
 alter table skus enable row level security;
+alter table sku_costs enable row level security;
 alter table designs enable row level security;
 alter table notes enable row level security;
 alter table messages enable row level security;
@@ -141,6 +148,10 @@ create policy "Admins manage all SKUs"
 
 create policy "Clients read their own SKUs"
   on skus for select using (client_id = get_my_client_id());
+
+-- SKU COSTS: admins only, no client access
+create policy "Admins manage SKU costs"
+  on sku_costs for all using (is_admin()) with check (is_admin());
 
 -- DESIGNS
 create policy "Admins manage all designs"
@@ -200,6 +211,9 @@ create policy "Clients insert messages for their SKUs"
 -- alter table skus rename column shipping_cost to landed_cost_per_unit;
 -- If the column doesn't exist at all:
 -- alter table skus add column if not exists landed_cost_per_unit numeric(10,2) not null default 0;
+
+-- Move cost_price / landed_cost_per_unit from skus into admin-only sku_costs:
+-- run supabase/migrations/20261008_sku_costs.sql
 
 -- ─────────────────────────────────────────────
 -- STORAGE BUCKET (run separately or via dashboard)

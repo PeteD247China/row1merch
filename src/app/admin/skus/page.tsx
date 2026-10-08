@@ -12,7 +12,7 @@ export default async function SkusPage() {
   ] = await Promise.all([
     supabase
       .from("skus")
-      .select("*, supplier:suppliers(id,name), warehouse:warehouses(id,name), client:clients(id,company_name)")
+      .select("*, supplier:suppliers(id,name), warehouse:warehouses(id,name), client:clients(id,company_name), cost:sku_costs(*)")
       .order("created_at", { ascending: false }),
     supabase.from("clients").select("*").eq("role", "client"),
     supabase.from("suppliers").select("*").order("name"),

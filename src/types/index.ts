@@ -38,9 +38,7 @@ export interface SKU {
   sku_code: string;
   name: string;
   description: string | null;
-  cost_price: number;
   client_price: number;
-  landed_cost_per_unit: number;
   status: SkuStatus;
   stock_qty: number;
   reorder_point: number;
@@ -51,6 +49,14 @@ export interface SKU {
   supplier?: Supplier;
   warehouse?: Warehouse;
   client?: Client;
+  // Admin-only; RLS returns null for clients
+  cost?: SkuCost | null;
+}
+
+export interface SkuCost {
+  sku_id: string;
+  cost_price: number;
+  landed_cost_per_unit: number;
 }
 
 export interface Design {

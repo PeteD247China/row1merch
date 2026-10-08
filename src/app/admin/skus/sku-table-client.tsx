@@ -155,7 +155,7 @@ export function SkuTableClient({ skus, clients, suppliers, warehouses }: Props) 
                   {sku.supplier?.name ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-right text-slate-700">
-                  {formatCurrency(sku.cost_price)}
+                  {formatCurrency(sku.cost?.cost_price ?? 0)}
                 </td>
                 <td className="px-4 py-3 text-right text-slate-700">
                   {formatCurrency(sku.client_price)}
