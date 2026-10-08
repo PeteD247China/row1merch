@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { SkuStatus, DesignStatus } from "@/types";
+import type { SkuStatus, DesignStatus, ShipmentDestination } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,6 +20,30 @@ export function formatDate(dateString: string): string {
     year: "numeric",
   }).format(new Date(dateString));
 }
+
+// For Postgres `date` values ("YYYY-MM-DD"). Formatted in UTC so the day
+// never shifts with the viewer's timezone.
+export function formatDay(day: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${day}T00:00:00Z`));
+}
+
+export function addDays(day: string, days: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export const SHIPMENT_DESTINATION_LABELS: Record<ShipmentDestination, string> = {
+  warehouse: "Warehouse",
+  theatre: "Theatre",
+  venue: "Venue",
+  other: "Other",
+};
 
 export const SKU_STATUS_LABELS: Record<SkuStatus, string> = {
   in_review: "In Review",

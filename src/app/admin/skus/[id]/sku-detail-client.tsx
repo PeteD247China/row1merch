@@ -12,6 +12,7 @@ import {
   Lock,
   Eye,
   ImageIcon,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { StatusBadge } from "@/components/sku/status-badge";
 import { SkuForm } from "@/components/sku/sku-form";
+import { ShipmentForm } from "@/components/sku/shipment-form";
+import { ShipmentTimeline } from "@/components/sku/shipment-timeline";
 import { createClient } from "@/lib/supabase/client";
 import {
   formatCurrency,
@@ -28,7 +31,16 @@ import {
   DESIGN_STATUS_COLORS,
   DESIGN_STATUS_LABELS,
 } from "@/lib/utils";
-import type { SKU, Client, Supplier, Warehouse, Design, Note, Message } from "@/types";
+import type {
+  SKU,
+  Client,
+  Supplier,
+  Warehouse,
+  Design,
+  Note,
+  Message,
+  SkuShipment,
+} from "@/types";
 
 interface Props {
   sku: SKU & { supplier?: Supplier; warehouse?: any; client?: any };
@@ -38,6 +50,7 @@ interface Props {
   designs: Design[];
   notes: Note[];
   messages: Message[];
+  shipment: SkuShipment | null;
   isAdmin: boolean;
 }
 
@@ -49,6 +62,7 @@ export function SkuDetailClient({
   designs: initialDesigns,
   notes: initialNotes,
   messages: initialMessages,
+  shipment: initialShipment,
   isAdmin,
 }: Props) {
   const router = useRouter();
@@ -58,6 +72,7 @@ export function SkuDetailClient({
   const [designs, setDesigns] = useState(initialDesigns);
   const [notes, setNotes] = useState(initialNotes);
   const [messages, setMessages] = useState(initialMessages);
+  const [shipment, setShipment] = useState(initialShipment);
   const [noteText, setNoteText] = useState("");
   const [noteInternal, setNoteInternal] = useState(true);
   const [messageText, setMessageText] = useState("");
@@ -301,6 +316,24 @@ export function SkuDetailClient({
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Manufacture & Shipment ── */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Truck className="h-4 w-4 text-slate-500" />
+            <CardTitle>Manufacture &amp; Shipment</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <ShipmentTimeline shipment={shipment} />
+          {isAdmin && (
+            <div className="border-t border-slate-100 pt-5">
+              <ShipmentForm skuId={sku.id} shipment={shipment} onSaved={setShipment} />
             </div>
           )}
         </CardContent>

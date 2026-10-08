@@ -7,6 +7,8 @@ export type SkuStatus =
   | "on_sale"
   | "discontinued";
 
+export type ShipmentDestination = "warehouse" | "theatre" | "venue" | "other";
+
 export type DesignStatus = "uploaded" | "in_review" | "approved" | "rejected";
 
 export interface Client {
@@ -84,4 +86,24 @@ export interface Message {
   content: string;
   created_at: string;
   sender?: Client;
+}
+
+export interface SkuShipment {
+  id: string;
+  sku_id: string;
+  production_start_date: string | null;
+  estimated_production_days: number | null;
+  estimated_production_complete: string | null;
+  dispatch_date: string | null;
+  estimated_transit_days: number | null;
+  estimated_arrival_date: string | null;
+  actual_arrival_date: string | null;
+  destination: ShipmentDestination | null;
+  created_at: string;
+  // Admin-only; RLS returns null for clients
+  notes?: SkuShipmentNotes | null;
+}
+
+export interface SkuShipmentNotes {
+  destination_notes: string | null;
 }

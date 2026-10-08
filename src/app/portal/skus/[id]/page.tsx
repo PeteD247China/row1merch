@@ -29,6 +29,7 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
     { data: designs },
     { data: notes },
     { data: messages },
+    { data: shipment },
   ] = await Promise.all([
     supabase
       .from("designs")
@@ -46,6 +47,13 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
       .select("*, sender:clients(*)")
       .eq("sku_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("sku_shipments")
+      .select("*")
+      .eq("sku_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   return (
@@ -54,6 +62,7 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
       designs={designs ?? []}
       notes={notes ?? []}
       messages={messages ?? []}
+      shipment={shipment}
     />
   );
 }

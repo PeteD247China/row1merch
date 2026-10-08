@@ -56,6 +56,27 @@ create table sku_costs (
   landed_cost_per_unit numeric(10,2) not null default 0
 );
 
+create table sku_shipments (
+  id uuid primary key default gen_random_uuid(),
+  sku_id uuid unique references skus(id) on delete cascade,
+  production_start_date date,
+  estimated_production_days int,
+  estimated_production_complete date,
+  dispatch_date date,
+  estimated_transit_days int,
+  estimated_arrival_date date,
+  actual_arrival_date date,
+  destination text check (destination in ('warehouse', 'theatre', 'venue', 'other')),
+  created_at timestamptz default now()
+);
+
+-- Kept out of sku_shipments so clients can never read them
+-- (RLS is row-level only, so any column on sku_shipments is visible to the owning client)
+create table sku_shipment_notes (
+  shipment_id uuid primary key references sku_shipments(id) on delete cascade,
+  destination_notes text
+);
+
 create table designs (
   id uuid primary key default uuid_generate_v4(),
   sku_id uuid not null references skus(id) on delete cascade,
@@ -102,6 +123,8 @@ alter table suppliers enable row level security;
 alter table warehouses enable row level security;
 alter table skus enable row level security;
 alter table sku_costs enable row level security;
+alter table sku_shipments enable row level security;
+alter table sku_shipment_notes enable row level security;
 alter table designs enable row level security;
 alter table notes enable row level security;
 alter table messages enable row level security;
@@ -152,6 +175,23 @@ create policy "Clients read their own SKUs"
 -- SKU COSTS: admins only, no client access
 create policy "Admins manage SKU costs"
   on sku_costs for all using (is_admin()) with check (is_admin());
+
+-- SKU SHIPMENTS: admins full access, clients read their own
+create policy "Admins manage shipments"
+  on sku_shipments for all using (is_admin()) with check (is_admin());
+
+create policy "Clients view their shipments"
+  on sku_shipments for select using (
+    exists (
+      select 1 from skus
+      where skus.id = sku_shipments.sku_id
+        and skus.client_id = get_my_client_id()
+    )
+  );
+
+-- SKU SHIPMENT NOTES: admins only, no client access
+create policy "Admins manage shipment notes"
+  on sku_shipment_notes for all using (is_admin()) with check (is_admin());
 
 -- DESIGNS
 create policy "Admins manage all designs"
@@ -214,6 +254,9 @@ create policy "Clients insert messages for their SKUs"
 
 -- Move cost_price / landed_cost_per_unit from skus into admin-only sku_costs:
 -- run supabase/migrations/20261008_sku_costs.sql
+
+-- Add Manufacture & Shipment tracking:
+-- run supabase/migrations/20261008_manufacture_shipment.sql
 
 -- ─────────────────────────────────────────────
 -- STORAGE BUCKET (run separately or via dashboard)

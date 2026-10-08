@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/sku/status-badge";
+import { ShipmentTimeline } from "@/components/sku/shipment-timeline";
 import { createClient } from "@/lib/supabase/client";
 import {
   formatCurrency,
@@ -16,7 +17,7 @@ import {
   DESIGN_STATUS_COLORS,
   DESIGN_STATUS_LABELS,
 } from "@/lib/utils";
-import type { SKU, Design, Note, Message } from "@/types";
+import type { SKU, Design, Note, Message, SkuShipment } from "@/types";
 
 const PRODUCTION_STEPS = [
   { key: "in_review", label: "Review" },
@@ -32,9 +33,16 @@ interface Props {
   designs: Design[];
   notes: Note[];
   messages: Message[];
+  shipment: SkuShipment | null;
 }
 
-export function ClientSkuView({ sku, designs, notes, messages: initialMessages }: Props) {
+export function ClientSkuView({
+  sku,
+  designs,
+  notes,
+  messages: initialMessages,
+  shipment,
+}: Props) {
   const [messages, setMessages] = useState(initialMessages);
   const [messageText, setMessageText] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
@@ -149,6 +157,18 @@ export function ClientSkuView({ sku, designs, notes, messages: initialMessages }
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Manufacture & Shipment (read-only) */}
+      {shipment && (
+        <Card className="mb-6">
+          <CardContent className="py-5">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">
+              Manufacture &amp; Shipment
+            </p>
+            <ShipmentTimeline shipment={shipment} />
           </CardContent>
         </Card>
       )}
