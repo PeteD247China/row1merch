@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -47,14 +48,9 @@ export function Sidebar({ isAdmin, userName }: SidebarProps) {
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-100">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white text-sm font-bold">
-          OM
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-900">Ovation Merch</p>
-          <p className="text-xs text-slate-500">{isAdmin ? "Admin" : "Client Portal"}</p>
-        </div>
+      <div className="px-6 py-5 border-b border-slate-100">
+        <Image src="/ovation-merch-logo.png" alt="Ovation Merch" width={140} height={67} priority />
+        <p className="mt-1 text-xs text-slate-500">{isAdmin ? "Admin" : "Client Portal"}</p>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">

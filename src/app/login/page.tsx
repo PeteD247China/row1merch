@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
@@ -49,11 +50,16 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white text-xl font-bold">
-            OM
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Ovation Merch</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign in to your account</p>
+          {/* mix-blend-multiply drops the logo's white background against the page */}
+          <Image
+            src="/ovation-merch-logo.png"
+            alt="Ovation Merch"
+            width={180}
+            height={86}
+            priority
+            className="mx-auto mb-4 mix-blend-multiply"
+          />
+          <p className="text-sm text-slate-500">Sign in to your account</p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
