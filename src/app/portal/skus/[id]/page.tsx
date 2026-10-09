@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { ClientSkuView } from "./client-sku-view";
 import { CLIENT_SKU_COLUMNS } from "@/lib/utils";
+import { SALES_REPORT_COLUMNS, todayUtc } from "@/lib/sales";
 
 export default async function ClientSkuPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,6 +32,7 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
     { data: notes },
     { data: messages },
     { data: shipment },
+    { data: salesReports },
   ] = await Promise.all([
     supabase
       .from("designs")
@@ -55,6 +57,13 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Most recent rows: covers 30 daily + ~5 weekly reports
+    supabase
+      .from("sku_sales_reports")
+      .select(SALES_REPORT_COLUMNS)
+      .eq("sku_id", id)
+      .order("report_date", { ascending: false })
+      .limit(40),
   ]);
 
   return (
@@ -64,6 +73,8 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
       notes={notes ?? []}
       messages={messages ?? []}
       shipment={shipment}
+      salesReports={salesReports ?? []}
+      today={todayUtc()}
     />
   );
 }

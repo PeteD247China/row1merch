@@ -13,6 +13,7 @@ import {
   Eye,
   ImageIcon,
   Truck,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +25,7 @@ import { StatusBadge } from "@/components/sku/status-badge";
 import { SkuForm } from "@/components/sku/sku-form";
 import { ShipmentForm } from "@/components/sku/shipment-form";
 import { ShipmentTimeline } from "@/components/sku/shipment-timeline";
+import { SalesIntegrationForm } from "@/components/sales/sales-integration-form";
 import { createClient } from "@/lib/supabase/client";
 import {
   formatCurrency,
@@ -40,6 +42,7 @@ import type {
   Note,
   Message,
   SkuShipment,
+  SkuSalesIntegration,
 } from "@/types";
 
 interface Props {
@@ -51,6 +54,7 @@ interface Props {
   notes: Note[];
   messages: Message[];
   shipment: SkuShipment | null;
+  salesIntegration: SkuSalesIntegration | null;
   isAdmin: boolean;
 }
 
@@ -63,6 +67,7 @@ export function SkuDetailClient({
   notes: initialNotes,
   messages: initialMessages,
   shipment: initialShipment,
+  salesIntegration: initialSalesIntegration,
   isAdmin,
 }: Props) {
   const router = useRouter();
@@ -73,6 +78,7 @@ export function SkuDetailClient({
   const [notes, setNotes] = useState(initialNotes);
   const [messages, setMessages] = useState(initialMessages);
   const [shipment, setShipment] = useState(initialShipment);
+  const [salesIntegration, setSalesIntegration] = useState(initialSalesIntegration);
   const [noteText, setNoteText] = useState("");
   const [noteInternal, setNoteInternal] = useState(true);
   const [messageText, setMessageText] = useState("");
@@ -338,6 +344,32 @@ export function SkuDetailClient({
           )}
         </CardContent>
       </Card>
+
+      {/* ── Sales Integration ── */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-slate-500" />
+                <CardTitle>Sales Integration</CardTitle>
+              </div>
+              {salesIntegration && (
+                <Link href="/admin/sales" className="text-xs text-slate-500 hover:text-slate-900">
+                  View sales reports
+                </Link>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <SalesIntegrationForm
+              skuId={sku.id}
+              integration={salesIntegration}
+              onSaved={setSalesIntegration}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Details + Notes/Messages ── */}
       <div className="grid grid-cols-3 gap-6">

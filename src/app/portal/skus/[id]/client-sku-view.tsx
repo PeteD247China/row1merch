@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, MessageSquare, Calculator, Eye } from "lucide-react";
+import { ArrowLeft, FileText, MessageSquare, Calculator, Eye, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/sku/status-badge";
 import { ShipmentTimeline } from "@/components/sku/shipment-timeline";
+import { SalesBarChart, SalesSummary } from "@/components/sales/sales-overview";
 import { createClient } from "@/lib/supabase/client";
 import {
   formatCurrency,
@@ -17,7 +18,7 @@ import {
   DESIGN_STATUS_COLORS,
   DESIGN_STATUS_LABELS,
 } from "@/lib/utils";
-import type { ClientSku, Design, Note, Message, SkuShipment } from "@/types";
+import type { ClientSku, Design, Note, Message, SkuShipment, SkuSalesReport } from "@/types";
 
 const PRODUCTION_STEPS = [
   { key: "in_review", label: "Review" },
@@ -34,6 +35,9 @@ interface Props {
   notes: Note[];
   messages: Message[];
   shipment: SkuShipment | null;
+  salesReports: SkuSalesReport[];
+  // "YYYY-MM-DD" from the server, so the chart's date range matches on hydration
+  today: string;
 }
 
 export function ClientSkuView({
@@ -42,11 +46,13 @@ export function ClientSkuView({
   notes,
   messages: initialMessages,
   shipment,
+  salesReports,
+  today,
 }: Props) {
   const [messages, setMessages] = useState(initialMessages);
   const [messageText, setMessageText] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
-  const [activeTab, setActiveTab] = useState<"designs" | "notes" | "messages" | "calculator">("designs");
+  const [activeTab, setActiveTab] = useState<"designs" | "notes" | "messages" | "calculator" | "sales">("designs");
   const [qty, setQty] = useState("100");
   const [sellPrice, setSellPrice] = useState("");
 
@@ -217,6 +223,7 @@ export function ClientSkuView({
               { key: "notes", label: "Updates", icon: Eye },
               { key: "messages", label: "Messages", icon: MessageSquare },
               { key: "calculator", label: "Calculator", icon: Calculator },
+              { key: "sales", label: "Sales", icon: BarChart3 },
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -332,6 +339,23 @@ export function ClientSkuView({
                   Send
                 </Button>
               </div>
+            </div>
+          )}
+
+          {/* Sales */}
+          {activeTab === "sales" && (
+            <div>
+              {salesReports.length === 0 ? (
+                <p className="text-sm text-slate-400 py-6 text-center">
+                  No sales data yet. Sales figures appear here once your Row1Merch team
+                  connects this product&apos;s online store.
+                </p>
+              ) : (
+                <div className="space-y-6">
+                  <SalesSummary reports={salesReports} />
+                  <SalesBarChart reports={salesReports} endDate={today} />
+                </div>
+              )}
             </div>
           )}
 

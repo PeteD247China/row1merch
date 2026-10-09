@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   Warehouse,
+  BarChart3,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ const adminLinks = [
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/suppliers", label: "Suppliers", icon: Building2 },
   { href: "/admin/warehouses", label: "Warehouses", icon: Warehouse },
+  { href: "/admin/sales", label: "Sales", icon: BarChart3 },
 ];
 
 const clientLinks = [

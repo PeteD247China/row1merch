@@ -2,6 +2,9 @@
   "functions": {
     "src/app/api/designs/upload/route.ts": {
       "maxDuration": 30
+    },
+    "src/app/api/sales/shopify-sync/route.ts": {
+      "maxDuration": 60
     }
   }
 }

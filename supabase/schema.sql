@@ -81,6 +81,41 @@ create table sku_shipment_notes (
   destination_notes text
 );
 
+-- Admin-only: holds Shopify access tokens, which must never reach clients
+create table sku_sales_integrations (
+  id uuid primary key default gen_random_uuid(),
+  sku_id uuid unique references skus(id) on delete cascade,
+  platform text not null check (platform in ('shopify', 'square')),
+  shopify_store_domain text,
+  shopify_access_token text,
+  shopify_product_id text,
+  shopify_variant_id text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table sku_sales_reports (
+  id uuid primary key default gen_random_uuid(),
+  sku_id uuid references skus(id) on delete cascade,
+  report_date date not null,
+  period text not null check (period in ('daily', 'weekly')),
+  units_sold int not null default 0,
+  gross_revenue numeric(10,2) not null default 0,
+  platform text not null,
+  created_at timestamptz default now(),
+  synced_at timestamptz not null default now(),
+  -- weekly rows use the Monday the week starts on as report_date
+  unique (sku_id, period, report_date)
+);
+
+-- Admin-only: Shopify order references behind each report. Kept off
+-- sku_sales_reports because the client read policy there covers every column.
+create table sku_sales_raw_data (
+  id uuid primary key default gen_random_uuid(),
+  report_id uuid unique references sku_sales_reports(id) on delete cascade,
+  raw_data jsonb
+);
+
 create table designs (
   id uuid primary key default uuid_generate_v4(),
   sku_id uuid not null references skus(id) on delete cascade,
@@ -114,6 +149,7 @@ create table messages (
 
 create index skus_client_id_idx on skus(client_id);
 create index skus_status_idx on skus(status);
+create index sku_sales_reports_sku_date_idx on sku_sales_reports(sku_id, report_date);
 create index designs_sku_id_idx on designs(sku_id);
 create index notes_sku_id_idx on notes(sku_id);
 create index messages_sku_id_idx on messages(sku_id);
@@ -129,6 +165,9 @@ alter table skus enable row level security;
 alter table sku_costs enable row level security;
 alter table sku_shipments enable row level security;
 alter table sku_shipment_notes enable row level security;
+alter table sku_sales_integrations enable row level security;
+alter table sku_sales_reports enable row level security;
+alter table sku_sales_raw_data enable row level security;
 alter table designs enable row level security;
 alter table notes enable row level security;
 alter table messages enable row level security;
@@ -197,6 +236,27 @@ create policy "Clients view their shipments"
 create policy "Admins manage shipment notes"
   on sku_shipment_notes for all using (is_admin()) with check (is_admin());
 
+-- SALES INTEGRATIONS: admins only (contains access tokens)
+create policy "Admins manage integrations"
+  on sku_sales_integrations for all using (is_admin()) with check (is_admin());
+
+-- SALES REPORTS: admins full access, clients read their own
+create policy "Admins manage reports"
+  on sku_sales_reports for all using (is_admin()) with check (is_admin());
+
+create policy "Clients view their reports"
+  on sku_sales_reports for select using (
+    exists (
+      select 1 from skus
+      where skus.id = sku_sales_reports.sku_id
+        and skus.client_id = get_my_client_id()
+    )
+  );
+
+-- SALES RAW DATA: admins only, no client access
+create policy "Admins manage raw sales data"
+  on sku_sales_raw_data for all using (is_admin()) with check (is_admin());
+
 -- DESIGNS
 create policy "Admins manage all designs"
   on designs for all using (is_admin()) with check (is_admin());
@@ -264,6 +324,9 @@ create policy "Clients insert messages for their SKUs"
 
 -- Add resale price and split warehouse/theatre stock:
 -- run supabase/migrations/20261009_stock_control.sql
+
+-- Add Sales Reporting (Shopify integration + synced reports):
+-- run supabase/migrations/20261009_sales_reporting.sql
 
 -- ─────────────────────────────────────────────
 -- STORAGE BUCKET (run separately or via dashboard)

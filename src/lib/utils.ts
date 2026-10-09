@@ -32,6 +32,18 @@ export function formatDay(day: string): string {
   }).format(new Date(`${day}T00:00:00Z`));
 }
 
+// Fixed to UK time so server and browser render the same string
+export function formatDateTime(timestamp: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/London",
+  }).format(new Date(timestamp));
+}
+
 export function addDays(day: string, days: number): string {
   const d = new Date(`${day}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);

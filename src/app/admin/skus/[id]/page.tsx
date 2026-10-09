@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SkuDetailClient } from "./sku-detail-client";
+import { SALES_INTEGRATION_COLUMNS, toSalesIntegration } from "@/lib/sales";
 
 export default async function SkuDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,6 +16,7 @@ export default async function SkuDetailPage({ params }: { params: Promise<{ id: 
     { data: notes },
     { data: messages },
     { data: shipment },
+    { data: integrationRow },
   ] = await Promise.all([
     supabase
       .from("skus")
@@ -46,6 +48,13 @@ export default async function SkuDetailPage({ params }: { params: Promise<{ id: 
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // The token is selected only to know whether one is stored; it is
+    // stripped by toSalesIntegration() before reaching the client component
+    supabase
+      .from("sku_sales_integrations")
+      .select(`${SALES_INTEGRATION_COLUMNS}, shopify_access_token`)
+      .eq("sku_id", id)
+      .maybeSingle(),
   ]);
 
   if (!sku) notFound();
@@ -60,6 +69,7 @@ export default async function SkuDetailPage({ params }: { params: Promise<{ id: 
       notes={notes ?? []}
       messages={messages ?? []}
       shipment={shipment}
+      salesIntegration={integrationRow ? toSalesIntegration(integrationRow) : null}
       isAdmin={true}
     />
   );

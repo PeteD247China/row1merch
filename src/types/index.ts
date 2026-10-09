@@ -118,3 +118,29 @@ export interface SkuShipment {
 export interface SkuShipmentNotes {
   destination_notes: string | null;
 }
+
+export type SalesPlatform = "shopify" | "square";
+
+// sku_sales_integrations as sent to the browser. The access token is never
+// selected for the UI; has_access_token says whether one is stored.
+export interface SkuSalesIntegration {
+  id: string;
+  sku_id: string;
+  platform: SalesPlatform;
+  shopify_store_domain: string | null;
+  shopify_product_id: string | null;
+  shopify_variant_id: string | null;
+  updated_at: string;
+  has_access_token: boolean;
+}
+
+export interface SkuSalesReport {
+  id: string;
+  sku_id: string;
+  report_date: string;
+  period: "daily" | "weekly";
+  units_sold: number;
+  gross_revenue: number;
+  platform: string;
+  synced_at: string;
+}
