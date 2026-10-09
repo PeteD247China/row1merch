@@ -1,4 +1,4 @@
--- Row1Merch Database Schema
+-- Ovation Merch Database Schema
 -- Run this in the Supabase SQL Editor
 
 -- Enable UUID extension
@@ -50,7 +50,7 @@ create table skus (
   created_at timestamptz not null default now()
 );
 
--- Row1Merch's costs, kept out of skus so clients can never read them
+-- Ovation Merch's costs, kept out of skus so clients can never read them
 -- (RLS is row-level only, so any column on skus is visible to the owning client)
 create table sku_costs (
   sku_id uuid primary key references skus(id) on delete cascade,

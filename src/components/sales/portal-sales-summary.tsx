@@ -43,7 +43,7 @@ export function PortalSalesSummary({ skus, reports, today }: Props) {
       {hint && <p className="mt-0.5 text-xs text-slate-400">{hint}</p>}
     </div>
   );
-  const revenueHint = "Based on units sold × your Row1Merch price";
+  const revenueHint = "Based on units sold × your Ovation Merch price";
 
   return (
     <Card className="mb-8">

@@ -59,7 +59,7 @@ export default async function PortalPage() {
           </div>
           <h2 className="text-lg font-semibold text-slate-700 mb-1">No products yet</h2>
           <p className="text-sm text-slate-400">
-            Your Row1Merch team will add your products here soon.
+            Your Ovation Merch team will add your products here soon.
           </p>
         </div>
       ) : (

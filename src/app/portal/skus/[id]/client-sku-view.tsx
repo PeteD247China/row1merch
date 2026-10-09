@@ -297,7 +297,7 @@ export function ClientSkuView({
               <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                 {messages.length === 0 && (
                   <p className="text-sm text-slate-400 py-6 text-center">
-                    No messages yet. Send a message to the Row1Merch team.
+                    No messages yet. Send a message to the Ovation Merch team.
                   </p>
                 )}
                 {messages.map((msg) => {
@@ -310,7 +310,7 @@ export function ClientSkuView({
                         }`}
                       >
                         <p className="text-xs mb-1 opacity-60">
-                          {isAdmin ? "Row1Merch" : "You"} · {formatDate(msg.created_at)}
+                          {isAdmin ? "Ovation Merch" : "You"} · {formatDate(msg.created_at)}
                         </p>
                         <p className="text-sm">{msg.content}</p>
                       </div>
@@ -321,7 +321,7 @@ export function ClientSkuView({
               <div className="flex gap-2 pt-2 border-t border-slate-100">
                 <Textarea
                   rows={2}
-                  placeholder="Message the Row1Merch team..."
+                  placeholder="Message the Ovation Merch team..."
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   onKeyDown={(e) => {
@@ -347,7 +347,7 @@ export function ClientSkuView({
             <div>
               {salesReports.length === 0 ? (
                 <p className="text-sm text-slate-400 py-6 text-center">
-                  No sales data yet. Sales figures appear here once your Row1Merch team
+                  No sales data yet. Sales figures appear here once your Ovation Merch team
                   connects this product&apos;s online store.
                 </p>
               ) : (
@@ -404,7 +404,7 @@ export function ClientSkuView({
                     <span className="font-medium text-slate-900">{formatCurrency(sellPriceNum)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Your price from Row1Merch</span>
+                    <span className="text-slate-600">Your price from Ovation Merch</span>
                     <span className="font-medium text-slate-900">{formatCurrency(clientPrice)}</span>
                   </div>
                   <div className="flex justify-between text-sm font-semibold border-t border-slate-200 pt-2 mt-1">

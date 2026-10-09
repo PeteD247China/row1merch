@@ -1,4 +1,4 @@
--- Move Row1Merch's cost fields off skus into an admin-only table.
+-- Move Ovation Merch's cost fields off skus into an admin-only table.
 -- RLS is row-level only, so while these columns lived on skus any client
 -- could read them for their own SKUs straight from the Supabase API.
 --
