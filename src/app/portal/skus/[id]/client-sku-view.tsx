@@ -352,7 +352,11 @@ export function ClientSkuView({
                 </p>
               ) : (
                 <div className="space-y-6">
-                  <SalesSummary reports={salesReports} />
+                  <SalesSummary
+                    reports={salesReports}
+                    revenueLabel="Venue Revenue (sold price)"
+                    revenueHint="Gross revenue at the venue's selling price"
+                  />
                   <SalesBarChart reports={salesReports} endDate={today} />
                 </div>
               )}

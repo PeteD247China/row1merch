@@ -36,12 +36,14 @@ export function PortalSalesSummary({ skus, reports, today }: Props) {
     null
   );
 
-  const stat = (label: string, value: string) => (
+  const stat = (label: string, value: string, hint?: string) => (
     <div>
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-0.5 text-xl font-bold text-slate-900">{value}</p>
+      {hint && <p className="mt-0.5 text-xs text-slate-400">{hint}</p>}
     </div>
   );
+  const revenueHint = "Based on units sold × your Row1Merch price";
 
   return (
     <Card className="mb-8">
@@ -55,8 +57,8 @@ export function PortalSalesSummary({ skus, reports, today }: Props) {
         <div className="grid grid-cols-5 gap-6">
           {stat("Units today", sum((s) => s.unitsToday).toLocaleString())}
           {stat("Units this week", sum((s) => s.unitsWeek).toLocaleString())}
-          {stat("Revenue today", formatCurrency(sum((s) => s.revenueToday)))}
-          {stat("Revenue this week", formatCurrency(sum((s) => s.revenueWeek)))}
+          {stat("Your Revenue (at client price) today", formatCurrency(sum((s) => s.revenueToday)), revenueHint)}
+          {stat("Your Revenue (at client price) this week", formatCurrency(sum((s) => s.revenueWeek)), revenueHint)}
           <div>
             <p className="text-xs text-slate-500">Top seller this week</p>
             {top ? (
@@ -75,7 +77,7 @@ export function PortalSalesSummary({ skus, reports, today }: Props) {
           </div>
         </div>
         <p className="mt-3 text-xs text-slate-400">
-          Revenue is units sold × your price per unit. Figures update when sales are synced.
+          Figures update when sales are synced.
         </p>
       </CardContent>
     </Card>

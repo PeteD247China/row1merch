@@ -60,10 +60,14 @@ export function SalesBarChart({ reports, endDate }: ChartProps) {
 
 interface SummaryProps {
   reports: SkuSalesReport[];
+  // Optional label/helper for the gross revenue figure (the portal uses these
+  // to distinguish it from revenue at the client's price)
+  revenueLabel?: string;
+  revenueHint?: string;
 }
 
 // Latest daily + weekly figures and when they were last synced
-export function SalesSummary({ reports }: SummaryProps) {
+export function SalesSummary({ reports, revenueLabel, revenueHint }: SummaryProps) {
   const daily = latestReport(reports, "daily");
   const weekly = latestReport(reports, "weekly");
   const synced = lastSyncedAt(reports);
@@ -76,7 +80,9 @@ export function SalesSummary({ reports }: SummaryProps) {
           <p className="mt-1 text-lg font-semibold text-slate-900">
             {report.units_sold.toLocaleString()} units
           </p>
+          {revenueLabel && <p className="mt-1 text-xs text-slate-500">{revenueLabel}</p>}
           <p className="text-sm text-slate-600">{formatCurrency(report.gross_revenue)}</p>
+          {revenueHint && <p className="text-xs text-slate-400">{revenueHint}</p>}
           <p className="mt-1 text-xs text-slate-400">
             {dateLabel} {formatDay(report.report_date)}
           </p>
