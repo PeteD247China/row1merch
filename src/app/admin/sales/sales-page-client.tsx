@@ -7,6 +7,7 @@ import { RefreshCw, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SalesBarChart, SalesSummary } from "@/components/sales/sales-overview";
+import { ClientSalesOverview } from "@/components/sales/client-sales-overview";
 import { formatCurrency } from "@/lib/utils";
 import type { SalesPlatform, SkuSalesReport } from "@/types";
 
@@ -14,6 +15,7 @@ export interface SalesRow {
   skuId: string;
   skuName: string;
   skuCode: string;
+  clientId: string | null;
   clientName: string | null;
   platform: SalesPlatform;
   storeDomain: string | null;
@@ -95,6 +97,8 @@ export function SalesPageClient({ rows, today }: Props) {
         </div>
       ) : (
         <div className="space-y-4">
+          <ClientSalesOverview rows={rows} today={today} />
+          <h2 className="pt-4 text-sm font-semibold text-slate-500 uppercase tracking-wide">By SKU</h2>
           {rows.map((row) => {
             const rowStatus = status[row.skuId];
             return (

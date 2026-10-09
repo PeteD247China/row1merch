@@ -11,7 +11,7 @@ export default async function SalesPage() {
 
   const { data: integrations } = await supabase
     .from("sku_sales_integrations")
-    .select(`${SALES_INTEGRATION_COLUMNS}, sku:skus(id, sku_code, name, client:clients(company_name))`)
+    .select(`${SALES_INTEGRATION_COLUMNS}, sku:skus(id, sku_code, name, client:clients(id, company_name))`)
     .order("created_at");
 
   // One query per SKU so a large catalogue can't hit the API's row cap
@@ -27,6 +27,7 @@ export default async function SalesPage() {
         skuId: integration.sku_id,
         skuName: integration.sku?.name ?? "Unknown SKU",
         skuCode: integration.sku?.sku_code ?? "",
+        clientId: integration.sku?.client?.id ?? null,
         clientName: integration.sku?.client?.company_name ?? null,
         platform: integration.platform,
         storeDomain: integration.shopify_store_domain,

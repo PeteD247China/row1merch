@@ -4,6 +4,8 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/sku/status-badge";
 import { formatCurrency, CLIENT_SKU_COLUMNS } from "@/lib/utils";
 import { Package } from "lucide-react";
+import { PortalSalesSummary } from "@/components/sales/portal-sales-summary";
+import { SALES_REPORT_COLUMNS, todayUtc, weekStart } from "@/lib/sales";
 
 export default async function PortalPage() {
   const supabase = await createClient();
@@ -24,6 +26,17 @@ export default async function PortalPage() {
     .eq("client_id", clientRecord.id)
     .order("created_at", { ascending: false });
 
+  // This week's report rows (daily + weekly) for the summary
+  const today = todayUtc();
+  const skuIds = (skus ?? []).map((s) => s.id);
+  const { data: salesReports } = skuIds.length
+    ? await supabase
+        .from("sku_sales_reports")
+        .select(SALES_REPORT_COLUMNS)
+        .in("sku_id", skuIds)
+        .gte("report_date", weekStart(today))
+    : { data: [] };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -34,6 +47,10 @@ export default async function PortalPage() {
           Your merchandise portfolio — {(skus ?? []).length} products
         </p>
       </div>
+
+      {(salesReports ?? []).length > 0 && (
+        <PortalSalesSummary skus={skus ?? []} reports={salesReports ?? []} today={today} />
+      )}
 
       {(skus ?? []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">

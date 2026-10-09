@@ -57,3 +57,12 @@ export function lastSyncedAt(reports: SkuSalesReport[]): string | null {
     null
   );
 }
+
+// This SKU's report rows for `today` and for the week containing it (if synced)
+export function currentFigures(reports: SkuSalesReport[], today: string) {
+  const week = weekStart(today);
+  return {
+    today: reports.find((r) => r.period === "daily" && r.report_date === today) ?? null,
+    week: reports.find((r) => r.period === "weekly" && r.report_date === week) ?? null,
+  };
+}
