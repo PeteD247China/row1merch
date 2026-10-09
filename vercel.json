@@ -8,6 +8,15 @@
     },
     "src/app/api/sales/square-sync/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/sales/cron-sync/route.ts": {
+      "maxDuration": 300
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/sales/cron-sync",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }

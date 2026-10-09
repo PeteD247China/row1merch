@@ -64,10 +64,17 @@ interface SummaryProps {
   // to distinguish it from revenue at the client's price)
   revenueLabel?: string;
   revenueHint?: string;
+  // The admin Sales page shows this in each card's header instead
+  showLastSynced?: boolean;
 }
 
 // Latest daily + weekly figures and when they were last synced
-export function SalesSummary({ reports, revenueLabel, revenueHint }: SummaryProps) {
+export function SalesSummary({
+  reports,
+  revenueLabel,
+  revenueHint,
+  showLastSynced = true,
+}: SummaryProps) {
   const daily = latestReport(reports, "daily");
   const weekly = latestReport(reports, "weekly");
   const synced = lastSyncedAt(reports);
@@ -99,9 +106,11 @@ export function SalesSummary({ reports, revenueLabel, revenueHint }: SummaryProp
         {tile("Latest day", daily, "")}
         {tile("Latest week", weekly, "Week of")}
       </div>
-      <p className="mt-2 text-xs text-slate-400">
-        {synced ? `Last synced ${formatDateTime(synced)}` : "Not synced yet"}
-      </p>
+      {showLastSynced && (
+        <p className="mt-2 text-xs text-slate-400">
+          {synced ? `Last synced ${formatDateTime(synced)}` : "Not synced yet"}
+        </p>
+      )}
     </div>
   );
 }

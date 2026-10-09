@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SalesBarChart, SalesSummary } from "@/components/sales/sales-overview";
 import { ClientSalesOverview } from "@/components/sales/client-sales-overview";
-import { formatCurrency } from "@/lib/utils";
-import { SYNC_ROUTES } from "@/lib/sales";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { lastSyncedAt, SYNC_ROUTES } from "@/lib/sales";
 import type { SalesPlatform, SkuSalesReport } from "@/types";
 
 export interface SalesRow {
@@ -120,6 +120,12 @@ export function SalesPageClient({ rows, today }: Props) {
                         {` · ${row.platform === "shopify" ? "Shopify" : "Square"}`}
                         {row.store && ` · ${row.store}`}
                       </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {(() => {
+                          const synced = lastSyncedAt(row.reports);
+                          return synced ? `Last synced ${formatDateTime(synced)}` : "Never synced";
+                        })()}
+                      </p>
                     </div>
                     <Button
                       variant="secondary"
@@ -146,7 +152,7 @@ export function SalesPageClient({ rows, today }: Props) {
                   )}
                   <div className="grid grid-cols-3 gap-6">
                     <div className="col-span-1">
-                      <SalesSummary reports={row.reports} />
+                      <SalesSummary reports={row.reports} showLastSynced={false} />
                     </div>
                     <div className="col-span-2">
                       <SalesBarChart reports={row.reports} endDate={today} />

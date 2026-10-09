@@ -1,11 +1,52 @@
-// Shared by the platform sync routes (server-only: reads tokens, writes reports).
+// Shared by the platform syncs (server-only: reads tokens, writes reports).
+// Used by the manual Sync Now routes and the daily cron.
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { addDays } from "@/lib/utils";
 import { todayUtc, weekStart, SALES_CHART_DAYS } from "@/lib/sales";
 import type { SalesPlatform } from "@/types";
 
 type ServerClient = Awaited<ReturnType<typeof createClient>>;
+// The admin's session client (Sync Now) or the service-role client (cron)
+export type DbClient = SupabaseClient;
+
+export interface SyncSummary {
+  sku_id: string;
+  platform: SalesPlatform;
+  synced_at: string;
+  orders_scanned: number;
+  truncated: boolean;
+  daily_reports: number;
+  weekly_reports: number;
+  last_30_days: { units_sold: number; gross_revenue: number };
+}
+
+export type SyncResult =
+  | { ok: true; summary: SyncSummary }
+  | { ok: false; status: number; error: string };
+
+export const syncFailure = (status: number, error: string): SyncResult => ({ ok: false, status, error });
+
+export function syncResponse(result: SyncResult) {
+  return result.ok
+    ? NextResponse.json(result.summary)
+    : NextResponse.json({ error: result.error }, { status: result.status });
+}
+
+// POST handler for a platform's Sync Now route: admin only, body { sku_id }
+export function manualSyncHandler(sync: (supabase: DbClient, skuId: string) => Promise<SyncResult>) {
+  return async function POST(request: Request) {
+    const { supabase, response } = await requireAdmin();
+    if (response) return response;
+
+    const { sku_id: skuId } = await request.json().catch(() => ({}));
+    if (!skuId) {
+      return NextResponse.json({ error: "Missing sku_id" }, { status: 400 });
+    }
+    return syncResponse(await sync(supabase, skuId));
+  };
+}
 
 export interface DayTotal {
   units: number;
@@ -60,9 +101,9 @@ export function addSale(
 }
 
 // Writes daily + weekly rows to sku_sales_reports and the order references to
-// the admin-only sku_sales_raw_data, then returns the sync summary response.
+// the admin-only sku_sales_raw_data, then returns the sync summary.
 export async function saveSalesReports(
-  supabase: ServerClient,
+  supabase: DbClient,
   opts: {
     skuId: string;
     platform: SalesPlatform;
@@ -71,7 +112,7 @@ export async function saveSalesReports(
     ordersScanned: number;
     truncated: boolean;
   }
-) {
+): Promise<SyncResult> {
   const { skuId, platform, days, ordersScanned, truncated } = opts;
   const { today, dailyStart, fetchFrom } = opts.window;
 
@@ -120,10 +161,7 @@ export async function saveSalesReports(
     .select("id, period, report_date");
 
   if (upsertError) {
-    return NextResponse.json(
-      { error: `Failed to save sales reports: ${upsertError.message}` },
-      { status: 500 }
-    );
+    return syncFailure(500, `Failed to save sales reports: ${upsertError.message}`);
   }
 
   const { error: rawError } = await supabase.from("sku_sales_raw_data").upsert(
@@ -135,24 +173,24 @@ export async function saveSalesReports(
   );
 
   if (rawError) {
-    return NextResponse.json(
-      { error: `Sales reports saved, but raw order data failed to save: ${rawError.message}` },
-      { status: 500 }
-    );
+    return syncFailure(500, `Sales reports saved, but raw order data failed to save: ${rawError.message}`);
   }
 
   const last30 = rows.filter((r) => r.period === "daily");
-  return NextResponse.json({
-    sku_id: skuId,
-    platform,
-    synced_at: syncedAt,
-    orders_scanned: ordersScanned,
-    truncated,
-    daily_reports: last30.length,
-    weekly_reports: rows.length - last30.length,
-    last_30_days: {
-      units_sold: last30.reduce((sum, r) => sum + r.units_sold, 0),
-      gross_revenue: round2(last30.reduce((sum, r) => sum + r.gross_revenue, 0)),
+  return {
+    ok: true,
+    summary: {
+      sku_id: skuId,
+      platform,
+      synced_at: syncedAt,
+      orders_scanned: ordersScanned,
+      truncated,
+      daily_reports: last30.length,
+      weekly_reports: rows.length - last30.length,
+      last_30_days: {
+        units_sold: last30.reduce((sum, r) => sum + r.units_sold, 0),
+        gross_revenue: round2(last30.reduce((sum, r) => sum + r.gross_revenue, 0)),
+      },
     },
-  });
+  };
 }

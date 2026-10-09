@@ -31,6 +31,11 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Vercel Cron has no user session; the route checks CRON_SECRET itself
+  if (pathname === "/api/sales/cron-sync") {
+    return supabaseResponse;
+  }
+
   // Allow public routes
   if (pathname.startsWith("/login") || pathname.startsWith("/auth")) {
     if (user) {
