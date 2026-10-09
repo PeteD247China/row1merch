@@ -40,7 +40,9 @@ create table skus (
   client_price numeric(10,2) not null default 0,
   status text not null default 'in_review'
     check (status in ('in_review','sample_pending','in_production','in_transit','landed','on_sale','discontinued')),
-  stock_qty integer not null default 0,
+  stock_warehouse integer not null default 0,
+  stock_theatre integer not null default 0,
+  stock_qty integer generated always as (stock_warehouse + stock_theatre) stored,
   reorder_point integer not null default 0,
   supplier_id uuid references suppliers(id) on delete set null,
   warehouse_id uuid references warehouses(id) on delete set null,
@@ -53,7 +55,9 @@ create table skus (
 create table sku_costs (
   sku_id uuid primary key references skus(id) on delete cascade,
   cost_price numeric(10,2) not null default 0,
-  landed_cost_per_unit numeric(10,2) not null default 0
+  landed_cost_per_unit numeric(10,2) not null default 0,
+  -- What the venue sells it for to the public
+  resale_price numeric(10,2)
 );
 
 create table sku_shipments (
@@ -257,6 +261,9 @@ create policy "Clients insert messages for their SKUs"
 
 -- Add Manufacture & Shipment tracking:
 -- run supabase/migrations/20261008_manufacture_shipment.sql
+
+-- Add resale price and split warehouse/theatre stock:
+-- run supabase/migrations/20261009_stock_control.sql
 
 -- ─────────────────────────────────────────────
 -- STORAGE BUCKET (run separately or via dashboard)

@@ -39,8 +39,10 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
     cost_price: sku?.cost?.cost_price?.toString() ?? "",
     client_price: sku?.client_price?.toString() ?? "",
     landed_cost_per_unit: sku?.cost?.landed_cost_per_unit?.toString() ?? "",
+    resale_price: sku?.cost?.resale_price?.toString() ?? "",
     status: sku?.status ?? "in_review",
-    stock_qty: sku?.stock_qty?.toString() ?? "0",
+    stock_warehouse: sku?.stock_warehouse?.toString() ?? "0",
+    stock_theatre: sku?.stock_theatre?.toString() ?? "0",
     reorder_point: sku?.reorder_point?.toString() ?? "0",
     supplier_id: sku?.supplier_id ?? "",
     warehouse_id: sku?.warehouse_id ?? "",
@@ -50,6 +52,8 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
   }
+
+  const totalStock = (parseInt(form.stock_warehouse) || 0) + (parseInt(form.stock_theatre) || 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +69,9 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
         description: form.description || null,
         client_price: parseFloat(form.client_price),
         status: form.status,
-        stock_qty: parseInt(form.stock_qty),
+        // stock_qty is a generated column, so it's never written
+        stock_warehouse: parseInt(form.stock_warehouse) || 0,
+        stock_theatre: parseInt(form.stock_theatre) || 0,
         reorder_point: parseInt(form.reorder_point),
         supplier_id: form.supplier_id || null,
         warehouse_id: form.warehouse_id || null,
@@ -87,6 +93,7 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
         sku_id: result.data.id,
         cost_price: parseFloat(form.cost_price),
         landed_cost_per_unit: parseFloat(form.landed_cost_per_unit) || 0,
+        resale_price: form.resale_price ? parseFloat(form.resale_price) : null,
       });
 
       if (costError) {
@@ -160,7 +167,7 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Cost Price (£) <span className="text-red-500">*</span>
@@ -205,19 +212,54 @@ export function SkuForm({ sku, clients, suppliers, warehouses, onSuccess }: SkuF
             placeholder="0.00"
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            Current Stock
+            Resale Price (£)
+          </label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.resale_price}
+            onChange={(e) => set("resale_price", e.target.value)}
+            placeholder="0.00"
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            What the venue sells it for to the public
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Stock in Warehouse
           </label>
           <Input
             type="number"
             min="0"
-            value={form.stock_qty}
-            onChange={(e) => set("stock_qty", e.target.value)}
+            value={form.stock_warehouse}
+            onChange={(e) => set("stock_warehouse", e.target.value)}
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Stock at Theatre/Venue
+          </label>
+          <Input
+            type="number"
+            min="0"
+            value={form.stock_theatre}
+            onChange={(e) => set("stock_theatre", e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Total Stock
+          </label>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            {totalStock}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">

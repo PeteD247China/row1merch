@@ -168,8 +168,11 @@ export function SkuTableClient({ skus, clients, suppliers, warehouses }: Props) 
                         : "text-slate-700"
                     }
                   >
-                    {sku.stock_qty}
+                    {sku.stock_qty} total
                   </span>
+                  <p className="text-xs text-slate-400 whitespace-nowrap">
+                    {sku.stock_warehouse} warehouse / {sku.stock_theatre} theatre
+                  </p>
                 </td>
                 <td className="px-4 py-3">
                   <StatusBadge status={sku.status} />

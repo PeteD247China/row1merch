@@ -45,6 +45,11 @@ export const SHIPMENT_DESTINATION_LABELS: Record<ShipmentDestination, string> = 
   other: "Other",
 };
 
+// SKU columns clients may see. The portal selects these explicitly instead of
+// `*` so the warehouse/theatre stock split is never fetched into the portal.
+export const CLIENT_SKU_COLUMNS =
+  "id, sku_code, name, description, client_price, status, stock_qty, reorder_point, supplier_id, warehouse_id, client_id, created_at";
+
 export const SKU_STATUS_LABELS: Record<SkuStatus, string> = {
   in_review: "In Review",
   sample_pending: "Sample Pending",

@@ -17,7 +17,7 @@ import {
   DESIGN_STATUS_COLORS,
   DESIGN_STATUS_LABELS,
 } from "@/lib/utils";
-import type { SKU, Design, Note, Message, SkuShipment } from "@/types";
+import type { ClientSku, Design, Note, Message, SkuShipment } from "@/types";
 
 const PRODUCTION_STEPS = [
   { key: "in_review", label: "Review" },
@@ -29,7 +29,7 @@ const PRODUCTION_STEPS = [
 ];
 
 interface Props {
-  sku: SKU & { supplier?: any; warehouse?: any; client?: any };
+  sku: ClientSku & { supplier?: any; warehouse?: any; client?: any };
   designs: Design[];
   notes: Note[];
   messages: Message[];

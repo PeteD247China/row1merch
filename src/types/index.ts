@@ -42,6 +42,9 @@ export interface SKU {
   description: string | null;
   client_price: number;
   status: SkuStatus;
+  stock_warehouse: number;
+  stock_theatre: number;
+  // Generated: stock_warehouse + stock_theatre (read-only)
   stock_qty: number;
   reorder_point: number;
   supplier_id: string | null;
@@ -55,10 +58,18 @@ export interface SKU {
   cost?: SkuCost | null;
 }
 
+// What the client portal fetches (see CLIENT_SKU_COLUMNS)
+export type ClientSku = Omit<
+  SKU,
+  "stock_warehouse" | "stock_theatre" | "cost" | "supplier" | "warehouse" | "client"
+>;
+
 export interface SkuCost {
   sku_id: string;
   cost_price: number;
   landed_cost_per_unit: number;
+  // Price the venue sells to the public at
+  resale_price: number | null;
 }
 
 export interface Design {

@@ -9,6 +9,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { SKU } from "@/types";
+import {
+  StockControlTable,
+  isLowStock,
+  type StockControlSku,
+} from "@/components/stock/stock-control-table";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
@@ -16,7 +21,7 @@ export default async function AdminDashboard() {
   const [
     { data: skus },
     { count: totalClients },
-    { data: activeStockSkus },
+    { data: stockSkus },
   ] = await Promise.all([
     supabase
       .from("skus")
@@ -26,14 +31,15 @@ export default async function AdminDashboard() {
     supabase.from("clients").select("*", { count: "exact", head: true }).eq("role", "client"),
     supabase
       .from("skus")
-      .select("id, sku_code, name, stock_qty, reorder_point, client:clients(company_name)")
-      .neq("status", "discontinued"),
+      .select(
+        "id, sku_code, name, status, stock_qty, stock_warehouse, stock_theatre, reorder_point, client_price, client:clients(id, company_name), cost:sku_costs(resale_price)"
+      )
+      .order("name")
+      .returns<StockControlSku[]>(),
   ]);
 
   // PostgREST can't compare two columns, so filter here
-  const lowStockSkus = (activeStockSkus ?? []).filter(
-    (s) => s.stock_qty <= s.reorder_point
-  );
+  const lowStockSkus = (stockSkus ?? []).filter(isLowStock);
 
   const statusCounts: Record<string, number> = {};
   (skus ?? []).forEach((s: SKU) => {
@@ -185,6 +191,17 @@ export default async function AdminDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Stock Control */}
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Stock Control</CardTitle>
+            <span className="text-xs text-slate-500">Warehouse vs theatre/venue, by client</span>
+          </div>
+        </CardHeader>
+        <StockControlTable skus={stockSkus ?? []} />
+      </Card>
     </div>
   );
 }

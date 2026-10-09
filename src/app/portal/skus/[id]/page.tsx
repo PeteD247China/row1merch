@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { ClientSkuView } from "./client-sku-view";
+import { CLIENT_SKU_COLUMNS } from "@/lib/utils";
 
 export default async function ClientSkuPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,7 +19,7 @@ export default async function ClientSkuPage({ params }: { params: Promise<{ id: 
 
   const { data: sku } = await supabase
     .from("skus")
-    .select("*, supplier:suppliers(*), warehouse:warehouses(*), client:clients(*)")
+    .select(`${CLIENT_SKU_COLUMNS}, supplier:suppliers(*), warehouse:warehouses(*), client:clients(*)`)
     .eq("id", id)
     .eq("client_id", clientRecord.id)
     .single();

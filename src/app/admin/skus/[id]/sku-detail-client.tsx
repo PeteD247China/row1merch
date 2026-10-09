@@ -374,6 +374,12 @@ export function SkuDetailClient({
                   </p>
                 </div>
                 <div>
+                  <p className="text-xs text-slate-500 mb-0.5">Resale Price</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {sku.cost?.resale_price != null ? formatCurrency(sku.cost.resale_price) : "-"}
+                  </p>
+                </div>
+                <div>
                   <p className="text-xs text-slate-500 mb-0.5">Stock</p>
                   <p
                     className={`text-sm font-medium ${
@@ -383,6 +389,9 @@ export function SkuDetailClient({
                     }`}
                   >
                     {sku.stock_qty} units
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {sku.stock_warehouse} warehouse / {sku.stock_theatre} theatre
                   </p>
                 </div>
                 <div>

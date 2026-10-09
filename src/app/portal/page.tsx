@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { StatusBadge } from "@/components/sku/status-badge";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, CLIENT_SKU_COLUMNS } from "@/lib/utils";
 import { Package } from "lucide-react";
 
 export default async function PortalPage() {
@@ -20,7 +20,7 @@ export default async function PortalPage() {
 
   const { data: skus } = await supabase
     .from("skus")
-    .select("*, supplier:suppliers(name), warehouse:warehouses(name)")
+    .select(`${CLIENT_SKU_COLUMNS}, supplier:suppliers(name), warehouse:warehouses(name)`)
     .eq("client_id", clientRecord.id)
     .order("created_at", { ascending: false });
 
