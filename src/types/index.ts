@@ -121,8 +121,8 @@ export interface SkuShipmentNotes {
 
 export type SalesPlatform = "shopify" | "square";
 
-// sku_sales_integrations as sent to the browser. The access token is never
-// selected for the UI; has_access_token says whether one is stored.
+// sku_sales_integrations as sent to the browser. Access tokens are never
+// selected for the UI; has_*_access_token says whether one is stored.
 export interface SkuSalesIntegration {
   id: string;
   sku_id: string;
@@ -130,8 +130,11 @@ export interface SkuSalesIntegration {
   shopify_store_domain: string | null;
   shopify_product_id: string | null;
   shopify_variant_id: string | null;
+  square_location_id: string | null;
+  square_variation_id: string | null;
   updated_at: string;
   has_access_token: boolean;
+  has_square_access_token: boolean;
 }
 
 export interface SkuSalesReport {

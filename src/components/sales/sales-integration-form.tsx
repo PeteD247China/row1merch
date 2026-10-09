@@ -26,8 +26,13 @@ export function SalesIntegrationForm({ skuId, integration, onSaved }: Props) {
     shopify_access_token: "",
     shopify_product_id: integration?.shopify_product_id ?? "",
     shopify_variant_id: integration?.shopify_variant_id ?? "",
+    // Write-only, like the Shopify token
+    square_access_token: "",
+    square_location_id: integration?.square_location_id ?? "",
+    square_variation_id: integration?.square_variation_id ?? "",
   });
   const hasToken = integration?.has_access_token ?? false;
+  const hasSquareToken = integration?.has_square_access_token ?? false;
 
   function set(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -53,6 +58,19 @@ export function SalesIntegrationForm({ skuId, integration, onSaved }: Props) {
         setError("Enter the Shopify variant ID (or a product ID to count all its variants).");
         return;
       }
+    } else {
+      if (!hasSquareToken && !form.square_access_token.trim()) {
+        setError("Enter the Square access token.");
+        return;
+      }
+      if (!/^[A-Za-z0-9_-]+$/.test(form.square_location_id.trim())) {
+        setError("Enter the Square location ID.");
+        return;
+      }
+      if (!form.square_variation_id.trim()) {
+        setError("Enter the Square catalog item variation ID.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -65,12 +83,17 @@ export function SalesIntegrationForm({ skuId, integration, onSaved }: Props) {
         shopify_store_domain: domain,
         shopify_product_id: form.shopify_product_id.trim() || null,
         shopify_variant_id: form.shopify_variant_id.trim() || null,
+        square_location_id: form.square_location_id.trim() || null,
+        square_variation_id: form.square_variation_id.trim() || null,
         updated_at: new Date().toISOString(),
       };
-      // Only send the token when a new one is entered; leaving it out of the
+      // Only send a token when a new one is entered; leaving it out of the
       // upsert keeps the stored one
       if (form.shopify_access_token.trim()) {
         payload.shopify_access_token = form.shopify_access_token.trim();
+      }
+      if (form.square_access_token.trim()) {
+        payload.square_access_token = form.square_access_token.trim();
       }
 
       const { data, error: saveError } = await supabase
@@ -85,10 +108,16 @@ export function SalesIntegrationForm({ skuId, integration, onSaved }: Props) {
       }
 
       onSaved({
-        ...(data as Omit<SkuSalesIntegration, "has_access_token">),
+        ...(data as Omit<SkuSalesIntegration, "has_access_token" | "has_square_access_token">),
         has_access_token: hasToken || !!payload.shopify_access_token,
+        has_square_access_token: hasSquareToken || !!payload.square_access_token,
       });
-      setForm((f) => ({ ...f, shopify_access_token: "", shopify_store_domain: domain ?? f.shopify_store_domain }));
+      setForm((f) => ({
+        ...f,
+        shopify_access_token: "",
+        square_access_token: "",
+        shopify_store_domain: domain ?? f.shopify_store_domain,
+      }));
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -113,9 +142,40 @@ export function SalesIntegrationForm({ skuId, integration, onSaved }: Props) {
       </div>
 
       {form.platform === "square" ? (
-        <p className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm text-slate-600">
-          Square sync isn&apos;t available yet. You can save Square as the platform now.
-        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Access Token</label>
+            <Input
+              type="password"
+              autoComplete="off"
+              value={form.square_access_token}
+              onChange={(e) => set("square_access_token", e.target.value)}
+              placeholder={hasSquareToken ? "Saved. Enter a new token to replace it" : "EAAA…"}
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Needs the ORDERS_READ and MERCHANT_PROFILE_READ permissions
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Location ID</label>
+            <Input
+              value={form.square_location_id}
+              onChange={(e) => set("square_location_id", e.target.value)}
+              placeholder="e.g. L8XKZ6W2N4D9Q"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Catalog Item Variation ID
+            </label>
+            <Input
+              value={form.square_variation_id}
+              onChange={(e) => set("square_variation_id", e.target.value)}
+              placeholder="e.g. 7XQ2LBVJ4N6YHT3ZKRMW5PEA"
+            />
+            <p className="mt-1 text-xs text-slate-400">The specific variant to track</p>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
           <div>

@@ -90,6 +90,9 @@ create table sku_sales_integrations (
   shopify_access_token text,
   shopify_product_id text,
   shopify_variant_id text,
+  square_access_token text,
+  square_location_id text,
+  square_variation_id text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -327,6 +330,9 @@ create policy "Clients insert messages for their SKUs"
 
 -- Add Sales Reporting (Shopify integration + synced reports):
 -- run supabase/migrations/20261009_sales_reporting.sql
+
+-- Add Square credentials to sales integrations:
+-- run supabase/migrations/20261009_square_sync.sql
 
 -- ─────────────────────────────────────────────
 -- STORAGE BUCKET (run separately or via dashboard)

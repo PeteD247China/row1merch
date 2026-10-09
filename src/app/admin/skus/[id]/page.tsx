@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SkuDetailClient } from "./sku-detail-client";
-import { SALES_INTEGRATION_COLUMNS, toSalesIntegration } from "@/lib/sales";
+import {
+  SALES_INTEGRATION_COLUMNS,
+  SALES_INTEGRATION_TOKEN_COLUMNS,
+  toSalesIntegration,
+} from "@/lib/sales";
 
 export default async function SkuDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -48,11 +52,11 @@ export default async function SkuDetailPage({ params }: { params: Promise<{ id: 
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    // The token is selected only to know whether one is stored; it is
+    // Tokens are selected only to know whether one is stored; they are
     // stripped by toSalesIntegration() before reaching the client component
     supabase
       .from("sku_sales_integrations")
-      .select(`${SALES_INTEGRATION_COLUMNS}, shopify_access_token`)
+      .select(`${SALES_INTEGRATION_COLUMNS}, ${SALES_INTEGRATION_TOKEN_COLUMNS}`)
       .eq("sku_id", id)
       .maybeSingle(),
   ]);

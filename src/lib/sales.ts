@@ -1,24 +1,38 @@
 import { addDays } from "@/lib/utils";
-import type { SkuSalesIntegration, SkuSalesReport } from "@/types";
+import type { SalesPlatform, SkuSalesIntegration, SkuSalesReport } from "@/types";
 
 export const SALES_CHART_DAYS = 30;
 
-// Never includes shopify_access_token. Pages that need to know whether a token
+// Never includes the access tokens. Pages that need to know whether a token
 // is stored select it server-side and pass it through toSalesIntegration().
 export const SALES_INTEGRATION_COLUMNS =
-  "id, sku_id, platform, shopify_store_domain, shopify_product_id, shopify_variant_id, updated_at";
+  "id, sku_id, platform, shopify_store_domain, shopify_product_id, shopify_variant_id, square_location_id, square_variation_id, updated_at";
+
+export const SALES_INTEGRATION_TOKEN_COLUMNS = "shopify_access_token, square_access_token";
 
 export const SALES_REPORT_COLUMNS =
   "id, sku_id, report_date, period, units_sold, gross_revenue, platform, synced_at";
 
-// Server-only: strips the access token down to a boolean before data is handed
+// Server-only: strips the access tokens down to booleans before data is handed
 // to a client component.
 export function toSalesIntegration(
-  row: Omit<SkuSalesIntegration, "has_access_token"> & { shopify_access_token: string | null }
+  row: Omit<SkuSalesIntegration, "has_access_token" | "has_square_access_token"> & {
+    shopify_access_token: string | null;
+    square_access_token: string | null;
+  }
 ): SkuSalesIntegration {
-  const { shopify_access_token, ...rest } = row;
-  return { ...rest, has_access_token: !!shopify_access_token };
+  const { shopify_access_token, square_access_token, ...rest } = row;
+  return {
+    ...rest,
+    has_access_token: !!shopify_access_token,
+    has_square_access_token: !!square_access_token,
+  };
 }
+
+export const SYNC_ROUTES: Record<SalesPlatform, string> = {
+  shopify: "/api/sales/shopify-sync",
+  square: "/api/sales/square-sync",
+};
 
 // Accepts "mystore.myshopify.com", "https://mystore.myshopify.com/" etc.
 // Returns null unless it's a *.myshopify.com host, since the access token is

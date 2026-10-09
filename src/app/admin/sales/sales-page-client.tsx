@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SalesBarChart, SalesSummary } from "@/components/sales/sales-overview";
 import { ClientSalesOverview } from "@/components/sales/client-sales-overview";
 import { formatCurrency } from "@/lib/utils";
+import { SYNC_ROUTES } from "@/lib/sales";
 import type { SalesPlatform, SkuSalesReport } from "@/types";
 
 export interface SalesRow {
@@ -18,7 +19,8 @@ export interface SalesRow {
   clientId: string | null;
   clientName: string | null;
   platform: SalesPlatform;
-  storeDomain: string | null;
+  // Shopify store domain or Square location
+  store: string | null;
   reports: SkuSalesReport[];
 }
 
@@ -34,7 +36,7 @@ export function SalesPageClient({ rows, today }: Props) {
   const [syncing, setSyncing] = useState<string | null>(null);
   const [status, setStatus] = useState<Record<string, SyncStatus>>({});
 
-  async function handleSync(skuId: string) {
+  async function handleSync(skuId: string, platform: SalesPlatform) {
     setSyncing(skuId);
     setStatus((s) => {
       const next = { ...s };
@@ -43,7 +45,7 @@ export function SalesPageClient({ rows, today }: Props) {
     });
 
     try {
-      const res = await fetch("/api/sales/shopify-sync", {
+      const res = await fetch(SYNC_ROUTES[platform], {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sku_id: skuId }),
@@ -116,15 +118,14 @@ export function SalesPageClient({ rows, today }: Props) {
                         <span className="font-mono">{row.skuCode}</span>
                         {row.clientName && ` · ${row.clientName}`}
                         {` · ${row.platform === "shopify" ? "Shopify" : "Square"}`}
-                        {row.storeDomain && ` · ${row.storeDomain}`}
+                        {row.store && ` · ${row.store}`}
                       </p>
                     </div>
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleSync(row.skuId)}
-                      disabled={syncing !== null || row.platform !== "shopify"}
-                      title={row.platform !== "shopify" ? "Only Shopify sync is supported so far" : undefined}
+                      onClick={() => handleSync(row.skuId, row.platform)}
+                      disabled={syncing !== null}
                     >
                       <RefreshCw className={`h-4 w-4 ${syncing === row.skuId ? "animate-spin" : ""}`} />
                       {syncing === row.skuId ? "Syncing…" : "Sync Now"}

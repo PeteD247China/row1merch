@@ -5,6 +5,9 @@
     },
     "src/app/api/sales/shopify-sync/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/sales/square-sync/route.ts": {
+      "maxDuration": 60
     }
   }
 }

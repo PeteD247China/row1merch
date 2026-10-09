@@ -30,7 +30,10 @@ export default async function SalesPage() {
         clientId: integration.sku?.client?.id ?? null,
         clientName: integration.sku?.client?.company_name ?? null,
         platform: integration.platform,
-        storeDomain: integration.shopify_store_domain,
+        store:
+          integration.platform === "shopify"
+            ? integration.shopify_store_domain
+            : integration.square_location_id && `Location ${integration.square_location_id}`,
         reports: (reports ?? []) as SkuSalesReport[],
       };
     })
